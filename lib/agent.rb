@@ -16,7 +16,9 @@ class Agent
   end
 
   def balance
-    1.0
+    visit_main_page
+    account = browser.div(class: 'account_current_amount').text
+    account.gsub(' ', '').sub(',', '.').to_f
   end
 
   def make_order
@@ -34,6 +36,10 @@ class Agent
 
   def open_browser
     @browser = Watir::Browser.new :chrome
+  end
+
+  def visit_main_page
+    browser.goto SERVER_URL + '/main.action'
   end
 
   def login
