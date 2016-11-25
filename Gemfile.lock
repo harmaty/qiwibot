@@ -1,0 +1,20 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    childprocess (0.5.9)
+      ffi (~> 1.0, >= 1.0.11)
+    ffi (1.9.14)
+    rubyzip (1.2.0)
+    selenium-webdriver (3.0.1)
+      childprocess (~> 0.5)
+      rubyzip (~> 1.0)
+      websocket (~> 1.0)
+    watir (6.0.2)
+      selenium-webdriver (~> 3.0)
+    websocket (1.2.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  watir
