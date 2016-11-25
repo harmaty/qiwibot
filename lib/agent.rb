@@ -15,6 +15,11 @@ class Agent
     login
   end
 
+  def stop
+    logout
+    close_browser
+  end
+
   def balance
     visit_main_page
     account = browser.div(class: 'account_current_amount').text
@@ -45,6 +50,14 @@ class Agent
   def login
     browser.goto SERVER_URL
     true
+  end
+
+  def logout
+
+  end
+
+  def close_browser
+    browser.close
   end
 
 end

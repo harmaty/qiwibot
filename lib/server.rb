@@ -10,7 +10,7 @@ class Server
   end
 
   def agent
-    Agent.new @login, @password
+    @agent ||= Agent.new @login, @password
   end
 
   def run
