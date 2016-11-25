@@ -2,12 +2,17 @@ require 'watir'
 
 class Agent
 
-  attr_accessor :browser
+  attr_accessor :browser, :logger
 
   SERVER_URL = 'https://qiwi.com'
 
   def initialize(login, password)
     @login, @password = login, password
+
+    @logger = Logger.new 'log/qiwi_agent.log'
+    @logger.formatter = proc do |severity, datetime, progname, msg|
+      "#{severity} [#{datetime.strftime('%Y-%m-%d %H:%M:%S.%6N')} ##{Process.pid}]:     #{msg[0, 300]}\n"
+    end
   end
 
   def start
@@ -48,6 +53,7 @@ class Agent
   end
 
   def login
+    logger.info 'logging in'
     browser.goto SERVER_URL
     browser.div(class: 'header-login-item-login').click
     browser.div(class: 'phone-input-container').text_field.value = @login

@@ -1,3 +1,4 @@
+require 'logger'
 load 'lib/server.rb'
 load 'lib/agent.rb'
 
