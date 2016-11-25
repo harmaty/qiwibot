@@ -38,6 +38,10 @@ class Agent
 
   def login
     browser.goto SERVER_URL
+    browser.div(class: 'header-login-item-login').click
+    browser.div(class: 'phone-input-container').text_field.value = @login
+    browser.text_field(class: 'qw-auth-form-password-remind-input').value = @password
+    browser.button(class: 'qw-submit-button').click
     true
   end
 
