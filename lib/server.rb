@@ -5,7 +5,7 @@ class Server
 
   COMMANDS = %w(balance transaction_history send_money_by_chunks make_order)
 
-  attr_accesssor :host, :port
+  attr_accessor :host, :port
 
   def initialize(login, password, host, port)
     @login, @password, @host, @port = login, password, host, port
