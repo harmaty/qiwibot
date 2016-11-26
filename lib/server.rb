@@ -15,9 +15,10 @@ class Server
 
   def run
     agent.start
-    server = TCPServer.open('localhost', 8081)
+    server = TCPServer.open(host, port)
 
     loop {
+      puts "Serving on #{host}:#{port} ..."
       client = server.accept # Wait for a client to connect
       input = receive_client_request(client)
 
