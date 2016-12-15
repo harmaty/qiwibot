@@ -31,12 +31,56 @@ class Agent
     account.gsub(' ', '').sub(',', '.').to_f
   end
 
-  def make_order
-
+  def make_order(amount, sender_phone, text)
+    browser.goto SERVER_URL + '/transfer/order.action'
+    browser.text_field(name: 'to').wait_until_present
+    browser.text_field(name: 'to').value= sender_phone
+    browser.text_field(name: 'value').value= '%.02f' % amount
+    browser.text_field(name: 'comment').value = text
+    browser.execute_script("$('form.payment_frm select#currency-select').remove()")
+    browser.execute_script("$('form.payment_frm').append('<input name=\"currency\" type=\"text\" value=\"RUB\">')")
+    sleep 1
+    browser.button(class: 'orangeBtn').click
+    browser.div(class: 'resultPage').wait_until_present
+    true
   end
 
   def transaction_history
+    logger.info "[transaction_history]"
+    browser.goto SERVER_URL + '/report/list.action?type=3'
+    begin
+      browser.div(data_widget: 'report-list').wait_until_present
+    rescue => e
+      if browser.div(data_widget: 'person-password-form').present?
+        Rails.logger.debug "[qiwi_agent] password to be changed"
+        change_password
+        browser.goto SERVER_URL + '/report/list.action?type=3'
+        browser.div(data_widget: 'report-list').wait_until_present
+      end
+    end
+    transactions = []
+    logger.info 'ready to parse transactions'
+    return [] unless browser.div(class: 'reports').present?
 
+    reports = browser.div(class: 'reports').html
+    doc = Nokogiri::HTML(reports)
+    doc.css(".reportsLine.status_SUCCESS").each do |report|
+      transaction = {}
+      transaction[:time] = report.css('.DateWithTransaction').css('.time').text.strip
+      transaction[:date] = report.css('.DateWithTransaction').css('.date').text.strip
+      transaction[:transaction_id] = report.css('.DateWithTransaction').css('.transaction').text.strip
+      transaction[:comment] = report.css('.ProvWithComment').css('.comment').text.strip
+      transaction[:transaction_type] = report.css('.income').any? ? 'input' : 'output'
+      if transaction[:transaction_type] == 'input'
+        transaction[:payer] = report.css('.ProvWithComment').css('.opNumber').text.strip
+      else
+        transaction[:payee] = report.css('.ProvWithComment').css('.opNumber').text.strip
+      end
+      transaction[:amount] = report.css('.cash').text.strip.gsub(' ', '').gsub(',', '.').to_f
+      transactions << transaction
+    end
+
+    transactions
   end
 
   def send_money_by_chunks
