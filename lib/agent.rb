@@ -1,4 +1,5 @@
 require 'watir'
+require 'nokogiri'
 
 class Agent
 

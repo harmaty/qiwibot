@@ -4,6 +4,9 @@ GEM
     childprocess (0.5.9)
       ffi (~> 1.0, >= 1.0.11)
     ffi (1.9.14)
+    mini_portile2 (2.1.0)
+    nokogiri (1.6.8.1)
+      mini_portile2 (~> 2.1.0)
     rubyzip (1.2.0)
     selenium-webdriver (3.0.1)
       childprocess (~> 0.5)
@@ -17,4 +20,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  nokogiri
   watir
+
+BUNDLED WITH
+   1.13.6
