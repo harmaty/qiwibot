@@ -158,12 +158,14 @@ class Agent
   private
 
   def open_browser
-    @headless = Headless.new
-    @headless.start
-    driver = Selenium::WebDriver.for BROWSER
-    @browser = Watir::Browser.new driver
-  rescue
-    @browser = Watir::Browser.new BROWSER
+    if RUBY_PLATFORM =~ /linux/i
+      @headless = Headless.new
+      @headless.start
+      driver = Selenium::WebDriver.for BROWSER
+      @browser = Watir::Browser.new driver
+    else
+      @browser = Watir::Browser.new BROWSER
+    end
   end
 
   def visit_main_page
