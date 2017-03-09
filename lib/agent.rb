@@ -6,14 +6,17 @@ class Agent
   attr_accessor :browser, :logger
 
   SERVER_URL = 'https://qiwi.com'
+  BROWSER = 'chrome'
 
-  def initialize(login, password)
+  def initialize(login, password, sms_server = nil, sms_token = nil)
     @login, @password = login, password
 
     @logger = Logger.new 'log/qiwi_agent.log'
     @logger.formatter = proc do |severity, datetime, progname, msg|
       "#{severity} [#{datetime.strftime('%Y-%m-%d %H:%M:%S.%6N')} ##{Process.pid}]:     #{msg[0, 300]}\n"
     end
+
+    sms_messages = SmsMessages.new sms_server, sms_token
   end
 
   def start
@@ -84,13 +87,83 @@ class Agent
     transactions
   end
 
-  def send_money_by_chunks
+  def send_money_by_chunks(amount, receiver_phone, text, chunk_size = 15000)
+    logger.info "[send_money_by_chunks: #{amount} #{receiver_phone} #{text}]"
+    # Нужно уточнить если была выплата
+    paid_amount = calculate_paid_amount(text)
+    remaining_amount = amount - paid_amount
+    if remaining_amount > 0
+      n = (remaining_amount/chunk_size.to_f).floor
+      remainder = remaining_amount%chunk_size.to_f
+      n.times { send_money(chunk_size, receiver_phone, text) }
+      send_money(remainder, receiver_phone, text) if remainder >= 1
+    end
+    sleep 5
+    # Проверка что транзакция существует
+    paid_amount = calculate_paid_amount(text)
+    if (amount - paid_amount).abs >= 1
+      raise PaymentError, "Failed to send all funds: unpaid amount: #{amount - paid_amount}"
+    end
+    logger.info "qiwi_balance=#{balance} amount=#{amount} balance_before=#{Currency.find_by_code('qiwi_rur').reserve} "
+    transaction_ids(text).join(',')
+  end
+
+  def send_money(amount, receiver_phone, text)
+    browser.goto SERVER_URL + '/transfer/form.action'
+    browser.div(class: 'qiwi-payment-amount-control').wait_until_present
+    browser.div(class: 'qiwi-payment-amount-control').text_field.value= amount
+    browser.div(class: 'qiwi-payment-form-container').text_field.value= format_phone(receiver_phone)
+    browser.div(class: 'qiwi-payment-form-comment').text_field.value= text
+    sleep 5
+    browser.div(class: 'qiwi-orange-button').click
+    logger.info 'submitted the form'
+    begin
+      browser.div(class: 'qiwi-payment-confirm').wait_until_present
+    rescue Watir::Wait::TimeoutError => e
+      if browser.span(class: 'errorElement').exists?
+        puts 'Error in form, stopped'
+        raise PaymentError, "Error in form: #{browser.span(class: 'errorElement').text}"
+      else
+        raise e
+      end
+    end
+    browser.div(class: 'qiwi-payment-confirm').div(class: 'qiwi-orange-button').click
+    logger.info 'confirmed'
+    if @sms_check_required
+      time = Time.now
+      begin
+        browser.form(class: 'qiwi-confirmation-smsform').wait_until_present
+      rescue Watir::Wait::TimeoutError => e
+        if browser.div(class: 'resultPage').i(class: 'icon-error').exists?
+          raise PaymentError, 'Invalid Payment'
+        else
+          raise e
+        end
+      end
+
+      Watir::Wait.until(120, "Sms was not received") { codes_received_since(time).any? }
+      sms_code = codes_received_since(time).last
+      logger.info "sms_code = #{sms_code}"
+      browser.form(class: 'qiwi-confirmation-smsform').text_field.value = sms_code
+      browser.form(class: 'qiwi-confirmation-smsform').div(class: 'qiwi-orange-button').click
+      logger.info 'received sms and submitted'
+    end
+
+    browser.div(class: 'payment-success').wait_until_present
+    raise browser.div(id: 'content').text unless browser.div(data_widget: 'payment-success').present?
+    logger.info 'payment success'
+    true
   end
 
   private
 
   def open_browser
-    @browser = Watir::Browser.new :chrome
+    @headless = Headless.new
+    @headless.start
+    driver = Selenium::WebDriver.for BROWSER
+    @browser = Watir::Browser.new driver
+  rescue
+    @browser = Watir::Browser.new BROWSER
   end
 
   def visit_main_page
@@ -114,6 +187,21 @@ class Agent
 
   def close_browser
     browser.close
+  end
+
+  def calculate_paid_amount(text)
+    @transaction_history = transaction_history
+    @transaction_history.select { |t| t[:comment] =~ /^#{text}/ }.map { |t| t[:amount] }.sum.round(2)
+  end
+
+  def transaction_ids(text)
+    @transaction_history ||= transaction_history
+    @transaction_history.select { |t| t[:comment] =~ /^#{text}/ }.map { |t| t[:transaction_id] }
+  end
+
+  def codes_received_since(time, regexp = /Kod\:\s(\d+)/)
+    sms_messages = SmsMessages.get(since: time)
+    sms_messages.map(&:message).map { |m| m.scan(regexp).first }.compact
   end
 
 end
