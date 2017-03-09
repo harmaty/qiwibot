@@ -1,5 +1,6 @@
 require 'watir'
 require 'nokogiri'
+require 'headless'
 
 class Agent
 
