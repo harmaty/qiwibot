@@ -17,7 +17,7 @@ class Agent
       "#{severity} [#{datetime.strftime('%Y-%m-%d %H:%M:%S.%6N')} ##{Process.pid}]:     #{msg[0, 300]}\n"
     end
 
-    sms_messages = SmsMessages.new sms_server, sms_token
+    #sms_messages = SmsMessages.new sms_server, sms_token
   end
 
   def start
