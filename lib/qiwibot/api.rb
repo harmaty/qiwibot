@@ -13,7 +13,7 @@ module Qiwibot
 
     def call(env)
       request = Rack::Request.new env
-      command = request.path_info.match(/\/(?<name>.*)/)[:name]
+      command = request.path_info.match(/\/(?<name>\w+)/)[:name]
 
       if command && COMMANDS.include?(command)
         begin
