@@ -9,7 +9,7 @@ module Qiwibot
     attr_accessor :browser, :logger
 
     SERVER_URL = 'https://qiwi.com'
-    BROWSER = 'chrome'
+    BROWSER = :chrome
 
     def initialize(login, password, sms_host = '0.0.0.0', sms_port = 8082)
       @login, @password = login, password
@@ -39,7 +39,7 @@ module Qiwibot
       account.gsub(' ', '').sub(',', '.').to_f
     end
 
-    def make_order(amount, sender_phone, text)
+    def make_order(amount:, sender_phone:, text:)
       browser.goto SERVER_URL + '/transfer/order.action'
       browser.text_field(name: 'to').wait_until_present
       browser.text_field(name: 'to').value= sender_phone
@@ -169,11 +169,6 @@ module Qiwibot
       raise browser.div(id: 'content').text unless browser.div(data_widget: 'payment-success').present?
       logger.info 'payment success'
       true
-    # rescue => e
-    #   if browser.div(class: 'qiwi-payment-amount-error').exists?
-    #     raise PaymentError, browser.div(class: 'qiwi-payment-amount-error').text
-    #   end
-
     end
 
     private
@@ -205,7 +200,7 @@ module Qiwibot
     end
 
     def logout
-
+      #TODO implement it
     end
 
     def close_browser
@@ -220,16 +215,6 @@ module Qiwibot
     def transaction_ids(text)
       @transaction_history ||= transaction_history
       @transaction_history.select { |t| t[:comment] =~ /^#{text}/ }.map { |t| t[:transaction_id] }
-    end
-
-    # def codes_received_since(time, regexp = /Kod\:\s(\d+)/)
-    #   sms_messages = SmsMessages.get(since: time)
-    #   sms_messages.map(&:message).map { |m| m.scan(regexp).first }.compact
-    # end
-
-    def format_phone(phone)
-      phone = phone.sub('+', '')
-      [phone[0], phone[1..-1]].join(' ')
     end
 
   end
