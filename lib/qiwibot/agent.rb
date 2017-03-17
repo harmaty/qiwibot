@@ -188,7 +188,8 @@ module Qiwibot
       browser.div(class: 'phone-input-container').text_field.value = @login
       browser.text_field(class: 'qw-auth-form-password-remind-input').value = @password
       browser.button(class: 'qw-submit-button').click
-      puts '  Logged in'
+      browser.div(class: 'phone').wait_until_present
+      logger.info '  logged in'
       true
     end
 
