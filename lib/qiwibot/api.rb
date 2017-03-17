@@ -20,7 +20,7 @@ module Qiwibot
           result = agent.send command, params
           json_response result
         rescue => e
-          json_response({message: e.message}, 400)
+          json_response({message: "[#{e.class}] #{e.message}"}, 400)
         end
       else
         json_response({message: 'unknown command'}, 404)

@@ -37,7 +37,9 @@ module Qiwibot
       logger.info "[balance]"
       visit_main_page
       account = browser.div(class: 'account_current_amount').text
-      account.gsub(' ', '').sub(',', '.').to_f
+      result = account.gsub(' ', '').sub(',', '.').to_f
+      logger.info "  balance is #{result}"
+      result
     end
 
     def make_order(amount:, sender_phone:, text:)

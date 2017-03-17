@@ -26,6 +26,9 @@ module Qiwibot
                                Port: port,
                                signals: false
                            })
+        EM::PeriodicTimer.new(60) do
+          agent.start unless agent.browser.exists?
+        end
       end
     end
   end
