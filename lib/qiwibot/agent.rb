@@ -34,7 +34,7 @@ module Qiwibot
     end
 
     def balance(options = {})
-      logger.info "[transaction_history]"
+      logger.info "[balance]"
       visit_main_page
       account = browser.div(class: 'account_current_amount').text
       account.gsub(' ', '').sub(',', '.').to_f
