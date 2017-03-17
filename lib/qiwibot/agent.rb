@@ -1,6 +1,7 @@
 require 'watir'
 require 'nokogiri'
 require 'headless'
+require 'timeout'
 
 module Qiwibot
   class Agent
@@ -153,9 +154,12 @@ module Qiwibot
 
         sms_code = ''
         puts 'Please enter sms code:'
-        Watir::Wait.until(120, "Sms was not received") { sms_code = @sms_message.receive }
+
+        Timeout::timeout(60) { sms_code = @sms_message.receive }
+
         logger.info "sms_code = #{sms_code}"
         puts "Kod is #{sms_code}"
+
         browser.form(class: 'qiwi-confirmation-smsform').text_field.value = sms_code
         browser.form(class: 'qiwi-confirmation-smsform').div(class: 'qiwi-orange-button').click
         logger.info 'received sms and submitted'
@@ -165,10 +169,10 @@ module Qiwibot
       raise browser.div(id: 'content').text unless browser.div(data_widget: 'payment-success').present?
       logger.info 'payment success'
       true
-    rescue => e
-      if browser.div(class: 'qiwi-payment-amount-error').exists?
-        raise PaymentError, browser.div(class: 'qiwi-payment-amount-error').text
-      end
+    # rescue => e
+    #   if browser.div(class: 'qiwi-payment-amount-error').exists?
+    #     raise PaymentError, browser.div(class: 'qiwi-payment-amount-error').text
+    #   end
 
     end
 
