@@ -1,8 +1,9 @@
 require 'json'
+require 'pry'
 
 module Qiwibot
   class Api
-    COMMANDS = %w(balance transaction_history send_money_by_chunks make_order)
+    COMMANDS = %w(balance transaction_history send_money make_order)
 
     attr_accessor :agent
 
@@ -16,13 +17,14 @@ module Qiwibot
 
       if command && COMMANDS.include?(command)
         begin
-          result = agent.send command
+          params = request.params.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
+          result = agent.send command, params
           json_response result
         rescue => e
           json_response({message: e.message}, 400)
         end
       else
-        json_response request.params, 404
+        json_response({message: 'unknown command'}, 404)
       end
     end
 
