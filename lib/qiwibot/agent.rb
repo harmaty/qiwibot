@@ -34,6 +34,7 @@ module Qiwibot
     end
 
     def balance(options = {})
+      logger.info "[transaction_history]"
       visit_main_page
       account = browser.div(class: 'account_current_amount').text
       account.gsub(' ', '').sub(',', '.').to_f
@@ -56,18 +57,10 @@ module Qiwibot
     def transaction_history(options = {})
       logger.info "[transaction_history]"
       browser.goto SERVER_URL + '/report/list.action?type=3'
-      begin
-        browser.div(data_widget: 'report-list').wait_until_present
-      rescue => e
-        if browser.div(data_widget: 'person-password-form').present?
-          Rails.logger.debug "[qiwi_agent] password to be changed"
-          change_password
-          browser.goto SERVER_URL + '/report/list.action?type=3'
-          browser.div(data_widget: 'report-list').wait_until_present
-        end
-      end
+      browser.div(data_widget: 'report-list').wait_until_present
+
       transactions = []
-      logger.info 'ready to parse transactions'
+      logger.info '  ready to parse transactions'
       return [] unless browser.div(class: 'reports').present?
 
       reports = browser.div(class: 'reports').html
@@ -95,7 +88,7 @@ module Qiwibot
       amount = amount.to_f
       chunk_size = chunk_size.to_f
 
-      logger.info "[send_money_by_chunks: #{amount} #{receiver_phone} #{text}]"
+      logger.info "[send_money: #{amount} #{receiver_phone} #{text}]"
       # Нужно уточнить если была выплата
       paid_amount = calculate_paid_amount(text)
       remaining_amount = amount - paid_amount
@@ -111,7 +104,7 @@ module Qiwibot
       if (amount - paid_amount).abs >= 1.0
         raise PaymentError, "Failed to send all funds: unpaid amount: #{amount - paid_amount}"
       end
-      logger.info "qiwi_balance=#{balance} amount=#{amount} "
+      logger.info "  payment (#{amount} #{receiver_phone} #{text}) completed"
       transaction_ids(text).join(',')
     end
 
@@ -128,7 +121,7 @@ module Qiwibot
 
       sleep 2
       browser.div(class: 'qiwi-orange-button').click
-      logger.info 'submitted the form'
+      logger.info '  submitted the payment form'
       begin
         browser.div(class: 'qiwi-payment-confirm').wait_until_present
       rescue Watir::Wait::TimeoutError => e
@@ -140,7 +133,7 @@ module Qiwibot
         end
       end
       browser.div(class: 'qiwi-payment-confirm').div(class: 'qiwi-orange-button').click
-      logger.info 'confirmed'
+      logger.info '  payment confirmed'
       if @sms_check_required
         begin
           browser.form(class: 'qiwi-confirmation-smsform').wait_until_present
@@ -157,17 +150,17 @@ module Qiwibot
 
         Timeout::timeout(60) { sms_code = @sms_message.receive }
 
-        logger.info "sms_code = #{sms_code}"
+        logger.info "  sms_code = #{sms_code}"
         puts "Kod is #{sms_code}"
 
         browser.form(class: 'qiwi-confirmation-smsform').text_field.value = sms_code
         browser.form(class: 'qiwi-confirmation-smsform').div(class: 'qiwi-orange-button').click
-        logger.info 'received sms and submitted'
+        logger.info '  received sms and submitted'
       end
 
       browser.div(class: 'payment-success').wait_until_present
       raise browser.div(id: 'content').text unless browser.div(data_widget: 'payment-success').present?
-      logger.info 'payment success'
+      logger.info '  payment success'
       true
     end
 
@@ -189,13 +182,13 @@ module Qiwibot
     end
 
     def login
-      logger.info 'logging in'
+      logger.info '[logging in]'
       browser.goto SERVER_URL
       browser.div(class: 'header-login-item-login').click
       browser.div(class: 'phone-input-container').text_field.value = @login
       browser.text_field(class: 'qw-auth-form-password-remind-input').value = @password
       browser.button(class: 'qw-submit-button').click
-      puts 'Logged in'
+      puts '  Logged in'
       true
     end
 
