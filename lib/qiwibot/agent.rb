@@ -166,21 +166,10 @@ module Qiwibot
       true
     end
 
-    private
-
-    def open_browser
-      if RUBY_PLATFORM =~ /linux/i
-        @headless = Headless.new
-        @headless.start
-        driver = Selenium::WebDriver.for BROWSER
-        @browser = Watir::Browser.new driver
-      else
-        @browser = Watir::Browser.new BROWSER
-      end
-    end
-
-    def visit_main_page
-      browser.goto SERVER_URL + '/main.action'
+    def logged_in?
+      browser.exists? &&
+          browser.div(class: 'phone').exists? &&
+          browser.div(class: 'phone').text.include?(@login)
     end
 
     def login
@@ -197,6 +186,27 @@ module Qiwibot
 
     def logout
       #TODO implement it
+    end
+
+    def alive?
+      browser.exists?
+    end
+
+    private
+
+    def open_browser
+      if RUBY_PLATFORM =~ /linux/i
+        @headless = Headless.new
+        @headless.start
+        driver = Selenium::WebDriver.for BROWSER
+        @browser = Watir::Browser.new driver
+      else
+        @browser = Watir::Browser.new BROWSER
+      end
+    end
+
+    def visit_main_page
+      browser.goto SERVER_URL + '/main.action'
     end
 
     def close_browser

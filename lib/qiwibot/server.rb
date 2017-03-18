@@ -27,7 +27,8 @@ module Qiwibot
                                signals: false
                            })
         EM::PeriodicTimer.new(60) do
-          agent.start unless agent.browser.exists?
+          agent.start unless agent.alive?
+          agent.login unless agent.logged_in?
         end
       end
     end

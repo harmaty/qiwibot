@@ -1,4 +1,5 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
+$0 = "qiwibot app"
 
 require 'eventmachine'
 require 'rack'
