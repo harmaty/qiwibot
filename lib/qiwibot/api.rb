@@ -1,7 +1,7 @@
-require 'json'
-
 module Qiwibot
   class Api
+    include JsonHelpers
+
     COMMANDS = %w(balance transaction_history send_money make_order)
 
     attr_accessor :agent
@@ -20,17 +20,12 @@ module Qiwibot
           result = agent.send command, params
           json_response result
         rescue => e
-          json_response({message: "[#{e.class}] #{e.message}"}, 400)
+          json_response({message: "[#{e.class}] #{e.message}"}, 500)
         end
       else
         json_response({message: 'unknown command'}, 404)
       end
     end
 
-    private
-
-    def json_response(result, status = 200, headers = {})
-      [status, headers, result.to_json]
-    end
   end
 end

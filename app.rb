@@ -1,18 +1,7 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
 $0 = "qiwibot app"
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 
-require 'eventmachine'
-require 'rack'
-require 'thin'
-require 'logger'
-require 'pry'
-
-module Qiwibot
-  autoload :Server, 'lib/qiwibot/server'
-  autoload :Agent, 'lib/qiwibot/agent'
-  autoload :Api, 'lib/qiwibot/api'
-  autoload :SmsMessage, 'lib/qiwibot/sms_message'
-end
+require 'lib/qiwibot'
 
 # start the application
 server = Qiwibot::Server.new({

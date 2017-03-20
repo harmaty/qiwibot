@@ -16,11 +16,17 @@ module Qiwibot
       @agent ||= Agent.new login, password, sms_host, sms_port
     end
 
+    def app
+      Rack::Builder.app Api.new(agent) do
+        use JwtAuth
+      end
+    end
+
     def run
       agent.start
       EM.run do
         Rack::Server.start({
-                               app: Api.new(agent),
+                               app: app,
                                server: server,
                                Host: host,
                                Port: port,
