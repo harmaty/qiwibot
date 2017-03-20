@@ -17,7 +17,6 @@ module Qiwibot
           raise 'Invalid token.'
         end
 
-        env[:operation] = operation
         @app.call env
       rescue JWT::ExpiredSignature
         json_response({message: 'The token has expired.'}, 403)

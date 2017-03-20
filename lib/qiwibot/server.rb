@@ -18,7 +18,10 @@ module Qiwibot
 
     def app
       Rack::Builder.app Api.new(agent) do
-        use JwtAuth
+        # use token authorization only if JWT_SECRET env variable is defined
+        if ENV['JWT_SECRET']
+          use JwtAuth
+        end
       end
     end
 
