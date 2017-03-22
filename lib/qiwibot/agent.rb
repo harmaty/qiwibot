@@ -115,7 +115,7 @@ module Qiwibot
 
       browser.div(class: 'qiwi-payment-amount-control').wait_until_present
       browser.div(class: 'qiwi-payment-amount-control').text_field.value= amount
-      receiver_phone.split('').each do |num|
+      receiver_phone.gsub('+', '').split('').each do |num|
         browser.execute_script("keyVal=48 + #{num};$('.qiwi-payment-form-container input').trigger({ type: 'keypress', keyCode: keyVal, which: keyVal, charCode: keyVal });")
       end
       #browser.div(class: 'qiwi-payment-form-container').text_field.value= format_phone(receiver_phone)
