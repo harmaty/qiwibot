@@ -79,7 +79,7 @@ module Qiwibot
         else
           transaction[:payee] = report.css('.ProvWithComment').css('.opNumber').text.strip
         end
-        transaction[:amount] = report.css('.cash').text.strip.gsub(' ', '').gsub(',', '.').to_f
+        transaction[:amount] = report.css('.originalExpense').text.strip.gsub(' ', '').gsub(',', '.').to_f
         transactions << transaction
       end
 
@@ -97,7 +97,7 @@ module Qiwibot
       if remaining_amount > 0
         n = (remaining_amount/chunk_size).floor
         remainder = remaining_amount%chunk_size
-        n.times { send_money(chunk_size, receiver_phone, text) }
+        n.times { send_money_once(chunk_size, receiver_phone, text) }
         send_money_once(remainder, receiver_phone, text) if remainder >= 1
       end
       sleep 3
