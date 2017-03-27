@@ -1,4 +1,6 @@
-$0 = "qiwibot app"
+app_name = ARGV[0] ? ARGV[0] : 'app'
+$0 = "qiwibot #{app_name}"
+
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
 require 'lib/qiwibot'
