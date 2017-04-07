@@ -10,6 +10,7 @@ module Qiwibot
 
     SERVER_URL = 'https://qiwi.com'
     BROWSER = :chrome
+    DEFAULT_CURRENCY = 'руб'
 
     def initialize(login, password, sms_host = '0.0.0.0', sms_port = 8082)
       @login, @password = login, password
@@ -79,8 +80,11 @@ module Qiwibot
         else
           transaction[:payee] = report.css('.ProvWithComment').css('.opNumber').text.strip
         end
-        transaction[:amount] = report.css('.originalExpense').text.strip.gsub(' ', '').gsub(',', '.').to_f
-        transactions << transaction
+        transaction[:amount] = report.css('.originalExpense').text.strip.gsub(/\s/, '').gsub(',', '.').to_f
+        currency = report.css('.originalExpense').text.scan(/[а-я]+/).first
+        if currency == DEFAULT_CURRENCY
+          transactions << transaction
+        end
       end
 
       transactions
