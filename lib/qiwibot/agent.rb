@@ -80,7 +80,7 @@ module Qiwibot
         else
           transaction[:payee] = report.css('.ProvWithComment').css('.opNumber').text.strip
         end
-        transaction[:amount] = report.css('.originalExpense').text.strip.gsub(/\s/, '').gsub(',', '.').to_f
+        transaction[:amount] = report.css('.originalExpense').text.strip.gsub(' ', '').gsub(/\s/, '').gsub(',', '.').to_f
         currency = report.css('.originalExpense').text.scan(/[а-я]+/).first
         if currency == DEFAULT_CURRENCY
           transactions << transaction
